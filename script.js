@@ -1806,4 +1806,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   
     // ... (rest of your existing JavaScript code) ...
-  });
+  });// Improve DOM update performance - 2024-11-12T09:54:57
