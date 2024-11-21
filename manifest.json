@@ -35,3 +35,4 @@
 # Refine manifest descriptions - 2024-11-18T10:18:12
 # Add minimum_chrome_version - 2024-11-19T10:57:17
 # Add manifest v3 skeleton and basic permissions - 2024-11-21T12:07:45
+# Refine permissions: storage, geolocation, fetch - 2024-11-21T14:24:11
