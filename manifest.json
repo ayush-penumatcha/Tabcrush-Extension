@@ -37,3 +37,4 @@
 # Add manifest v3 skeleton and basic permissions - 2024-11-21T12:07:45
 # Refine permissions: storage, geolocation, fetch - 2024-11-21T14:24:11
 # Add content script placeholder and host permissions - 2024-11-23T15:35:02
+# Add action default_popup and title - 2024-11-24T12:08:33
