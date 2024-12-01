@@ -1818,3 +1818,4 @@ document.addEventListener('DOMContentLoaded', () => {
 // Wire up quick links click handlers - 2024-11-25T12:39:34
 // Implement multi-search engine switching - 2024-11-26T12:10:42
 // Improve input debounce handling - 2024-11-27T16:16:33
+// Add unit-test stubs (notes) - 2024-12-01T08:49:26
