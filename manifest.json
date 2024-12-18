@@ -44,3 +44,4 @@
 # Update manifest version and description - 2024-12-03T15:42:37
 # Refine permissions: storage, geolocation, fetch - 2024-12-15T10:27:23
 # Add content script placeholder and host permissions - 2024-12-15T14:34:52
+# Adjust manifest fields for store - 2024-12-18T17:09:30
