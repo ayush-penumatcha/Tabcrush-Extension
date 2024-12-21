@@ -45,3 +45,4 @@
 # Refine permissions: storage, geolocation, fetch - 2024-12-15T10:27:23
 # Add content script placeholder and host permissions - 2024-12-15T14:34:52
 # Adjust manifest fields for store - 2024-12-18T17:09:30
+# Add icons and action definitions to manifest - 2024-12-21T13:10:00
