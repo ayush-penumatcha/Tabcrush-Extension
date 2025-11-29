@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TabCrush New Tab</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <style>
+.cursor {
+  position: fixed;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s, height 0.3s, border-color 0.3s;
+  z-index: 9999;
+}
+
+.cursor-follower {
+  position: fixed;
+  width: 8px;
+  height: 8px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s, height 0.3s, background-color 0.3s, opacity 0.3s;
+  z-index: 9998;
+}
+
+.click-effect {
+  position: fixed;
+  width: 40px;
+  height: 40px;
+  border: 2px solid rgba(255, 255, 255, 0);
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 0;
+  transition: transform 0.5s, opacity 0.5s, border-color 0.5s;
+  z-index: 9997;
+}
+
+/* Hover effect */
+.cursor:hover {
+  width: 40px;
+  height: 40px;
+  border-color: rgba(255, 255, 255, 0.8);
+}
+
+.cursor-follower:hover {
+  width: 16px;
+  height: 16px;
+  background-color: rgba(255, 255, 255, 1);
+}
+
+/* Click animation */
+.click-effect.active {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+  border-color: rgba(255, 255, 255, 0.5);
+}
+    </style>
+</head>
+
+<body>
+    <div class="animated-background">
+        <span style="width: 100px; height: 100px; left: 10%; top: 20%;"></span>
+        <span style="width: 150px; height: 150px; left: 60%; top: 50%;"></span>
+        <span style="width: 80px; height: 80px; left: 80%; top: 30%;"></span>
+        <span style="width: 120px; height: 120px; left: 30%; top: 70%;"></span>
+        <span style="width: 90px; height: 90px; left: 50%; top: 10%;"></span>
+    </div>
+    <div class="cursor"></div>
+    <div class="cursor-follower"></div>
+    <div class="click-effect"></div>
+
+    <div class="background-animation">
+        <div class="gradient-sphere"></div>
+        <div class="gradient-sphere"></div>
+        <div class="gradient-sphere"></div>
+    </div>
+
+    <div class="container">
+        <div class="top-bar">
+            <div id="extensionName" class="extension-name" style=" font-family: 'Kanit', serif;font-weight: 500;font-style: italic;letter-spacing: 1px;">TabCrush❤️‍🩹</div>
+            <div class="right-controls">
+                <div class="theme-toggle">
+                    <input type="checkbox" id="darkMode" class="dark-mode-toggle">
+                    <label for="darkMode" class="dark-mode-label">
+                        <svg class="sun" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        <svg class="moon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                    </label>
+                </div>
+                <button id="cryptoButton" class="crypto-button">
+                    <i class="fa-brands fa-btc"></i>
+                </button>
+                <button id="appsMenuToggle" class="apps-menu-toggle">
+                    <svg viewBox="0 0 24 24" fill="currentColor" class="dots-icon">
+                        <path
+                            d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="date-time">
+                <div id="time" class="time"></div>
+                <div id="date" class="date"></div>
+            </div>
+            <div class="quote-container">
+                <p id="quote" class="quote" style="font-weight: 600;"></p>
+                <p id="author" class="author" style=" font-family: 'Kanit', serif;font-weight: 300;font-style: Normal;"></p>
+            </div>
+
+            <div class="search-container">
+                <div class="search-box">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input type="text" id="searchInput" placeholder="Search the web" autocomplete="off">
+                    <button id="searchButton" class="search-button">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="search-engines">
+                    <label class="search-engine-option">
+                        <input type="radio" name="searchEngine" value="google" checked>
+                        <span class="checkmark"></span>
+                        <img src="https://www.google.com/favicon.ico" alt="Google">
+                        <span class="engine-name">Google</span>
+                    </label>
+                    <label class="search-engine-option">
+                        <input type="radio" name="searchEngine" value="bing">
+                        <span class="checkmark"></span>
+                        <img src="https://www.bing.com/favicon.ico" alt="Bing">
+                        <span class="engine-name">Bing</span>
+                    </label>
+                    <label class="search-engine-option">
+                        <input type="radio" name="searchEngine" value="yahoo">
+                        <span class="checkmark"></span>
+                        <img src="https://www.yahoo.com/favicon.ico" alt="Yahoo">
+                        <span class="engine-name">Yahoo</span>
+                    </label>
+                    <label class="search-engine-option">
+                        <input type="radio" name="searchEngine" value="duckduckgo">
+                        <span class="checkmark"></span>
+                        <img src="https://duckduckgo.com/favicon.ico" alt="DuckDuckGo">
+                        <span class="engine-name">DuckDuckGo</span>
+                    </label>
+                    <label class="search-engine-option">
+                        <input type="radio" name="searchEngine" value="ecosia">
+                        <span class="checkmark"></span>
+                        <img src="https://www.ecosia.org/favicon.ico" alt="Ecosia">
+                        <span class="engine-name">Ecosia</span>
+                    </label>
+                </div>
+            </div>
+            <div class="social">
+                <div class="social-links">
+                    <!-- Dynamically added social links will appear here -->
+                </div>
+            </div>
+            <!-- <p style="margin-top: 30px;">Theme Designed and Developed by Name</p> -->
+        </div>
+        <div class="weather-widget">
+            <div class="weather-content">
+                <div class="current-weather">
+                    <div id="weather-icon" class="weather-icon"></div>
+                    <div class="weather-info">
+                        <div id="location" class="location"></div>
+                        <div id="temperature" class="temperature"></div>
+                        <div id="weather-description" class="weather-description"></div>
+                        <div class="weather-extra-info">
+                            <div id="precipitation" class="precipitation"></div>
+                            <div id="sun-times" class="sun-times">
+                                <div id="sunrise" class="sunrise"></div>
+                                <div id="sunset" class="sunset"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="weatherDetails" class="weather-details"></div>
+            </div>
+            <div id="forecast" class="forecast"></div>
+            <div id="hourly-forecast" class="hourly-forecast"></div>
+        </div>
+
+
+
+
+        <div class="google-apps-menu">
+            <div class="google-apps-grid"></div>
+        </div>
+
+
+
+
+
+
+        <div class="tools-menu">
+            <button id="toolsToggle" class="tools-icon">
+                <i class="fa-solid fa-tools"></i>
+            </button>
+            <div id="toolsMenu" class="menu hidden">
+                <!-- Dynamically added tools will appear here -->
+            </div>
+        </div>
+
+
+        <button class="customize-button">Customize Theme</button>
+
+        <!-- Side Theme Menu -->
+        <!-- Side Theme Menu -->
+        <div id="customizeSidebar" class="customize-sidebar">
+            <button id="closeSidebar" class="close-sidebar">&times;</button>
+            <div id="sidebarContent" class="sidebar-content">
+                <!-- Main Content -->
+                <h2 id="sidebarTitle">Customize Theme</h2>
+                <br>
+                <div class="option name-change-wrapper">
+                    <span style="color: black;">Change Name</span>
+                    <div class="name-input-wrapper">
+                        <input type="text" id="nameInput" placeholder="Enter your name">
+                        <button id="nameChangeButton">OK</button>
+                    </div>
+                </div>
+                <div class="option toggle-wrapper">
+                    <span>Show Tools Menu</span>
+                    <label class="toggle-label">
+                        <input type="checkbox" id="toggleToolsMenu" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div id="addToolsButton" class="option add-tools-header">
+                    <span style="color: black;">Add Tools</span>
+                    <i class="fa-solid fa-chevron-right" style="color: black;"></i>
+                </div>
+                <div class="option toggle-wrapper">
+                    <span style="color: black;">Show Google Apps</span>
+                    <label class="toggle-label">
+                        <input type="checkbox" id="toggleGoogleApps" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div id="addSocialButton" class="option add-social-header">
+                    <span style="color: black;">Add Social Links</span>
+                    <i class="fa-solid fa-chevron-right" style="color: black;"></i>
+                </div>
+                <div id="changeBackgroundButton" class="option change-background-header">
+                    <span style="color: black;">Change Background</span>
+                    <i class="fa-solid fa-chevron-right" style="color: black;"></i>
+                </div>
+                <div id="changeWatchFaceButton" class="option change-watch-face-header">
+                    <span style="color: black;">Change Watch Face</span>
+                    <i class="fa-solid fa-chevron-right" style="color: black;"></i>
+                </div>
+                <div class="option toggle-wrapper">
+                    <span style="color: black;">Detailed Weather</span>
+                    <label class="toggle-label">
+                        <input type="checkbox" id="toggleDetailedWeather">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Add Tools Submenu -->
+            <div id="addToolsMenu" class="add-tools-menu hidden">
+                <button id="backButton" class="back-button">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <h2>Add Tools</h2>
+                <div id="addToolsContainer" class="add-tools">
+                    <!-- Dynamically populate tool options here -->
+                </div>
+            </div>
+
+            <!-- Add Social Links Submenu -->
+            <div id="addSocialMenu" class="add-social-menu hidden">
+                <button id="backSocialButton" class="back-button">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <h2 style="text-align: center;color: #000;">Add Social Links</h2>
+                <div id="socialLinksContainer" class="add-social">
+                    <!-- Dynamically populate social links here -->
+                </div>
+            </div>
+
+            <!-- Add this as a new submenu, similar to addToolsMenu and addSocialMenu -->
+            <div id="changeBackgroundMenu" class="change-background-menu hidden">
+                <button id="backBackgroundButton" class="back-button">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <h2 style="text-align: center;margin-bottom: 20px;color: #000;">Choose Background</h2>
+                <div class="background-options">
+                    <div class="background-option" data-bg="default">
+                        <div class="bg-preview default-bg"></div>
+                        <span style="color: black;">Default</span>
+                    </div>
+                    <div class="background-option" data-bg="vibrant-neon">
+                        <div class="bg-preview vibrant-neon-bg"></div>
+                        <span style="color: black;">Vibrant Neon</span>
+                    </div>
+                    <div class="background-option" data-bg="geometric-shapes">
+                        <div class="bg-preview geometric-shapes-bg"></div>
+                        <span style="color: black;">Geometric Shapes</span>
+                    </div>
+                    <div class="background-option" data-bg="abstract-blob">
+                        <div class="bg-preview abstract-blob-bg"></div>
+                        <span style="color: black;">Abstract Blob</span>
+                    </div>
+                    <div class="background-option" data-bg="particle-flow">
+                        <div class="bg-preview particle-flow-bg"></div>
+                        <span style="color: black;">Particle Flow</span>
+                    </div>
+                    <div class="background-option" data-bg="comic-pop-art">
+                        <div class="bg-preview comic-pop-art-bg"></div>
+                        <span style="color: black;">Comic Pop-Art</span>
+                    </div>
+                    <div class="background-option" data-bg="firefly-glow">
+                        <div class="bg-preview firefly-glow-bg"></div>
+                        <span style="color: black;">Firefly Glow</span>
+                    </div>
+                    <div class="background-option" data-bg="candyland">
+                        <div class="bg-preview candyland-bg"></div>
+                        <span style="color: black;">Candyland</span>
+                    </div>
+                    <div class="background-option" data-bg="pixel-art">
+                        <div class="bg-preview pixel-art-bg"></div>
+                        <span style="color: black;">Pixel Art</span>
+                    </div>
+                    <div class="background-option" data-bg="liquid-motion">
+                        <div class="bg-preview liquid-motion-bg"></div>
+                        <span style="color: black;">Liquid Motion</span>
+                    </div>
+                    <div class="background-option" data-bg="rainbow-hues">
+                        <div class="bg-preview rainbow-hues-bg"></div>
+                        <span style="color: black;">Rainbow Hues</span>
+                    </div>
+                    <div class="background-option" data-bg="aurora-borealis">
+                        <div class="bg-preview aurora-borealis-bg"></div>
+                        <span style="color: black;">Aurora Borealis</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Add this as a new submenu, similar to other customization menus -->
+            <div id="changeWatchFaceMenu" class="submenu change-watch-face-menu hidden">
+                <button id="backWatchFaceButton" class="back-button">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <h2 style="color: black;">Choose Watch Face</h2>
+                <div class="watch-face-options">
+                    <div class="watch-face-option" data-watch="standard-digital" style="padding: 5px;color: #000;">Standard Digital
+                    </div>
+                    <div class="watch-face-option" data-watch="glass-digital" style="padding: 5px; margin-top: 5px;color: #000;">
+                        Glass Digital</div>
+                </div>
+            </div>
+        </div>
+     </div>
+     <div id="cryptoDashboard" class="crypto-dashboard">
+        <div class="crypto-dashboard-content">
+            <div id="loadingOverlay" class="loading-overlay">
+                <div class="loading-content">
+                    <div class="loading-spinner"></div>
+                    <p>Loading cryptocurrency data...</p>
+                </div>
+            </div>
+            
+            <div id="errorMessage" class="error-message"></div>
+            
+            <button class="close-dashboard">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <div class="dashboard-header">
+                <h2>Cryptocurrency Market</h2>
+                <div class="market-overview">
+                    <div class="market-stat">
+                        <div class="stat-group">
+                            <span class="label">Market Cap</span>
+                            <div class="value-group">
+                                <span id="totalMarketCap" class="value">$0.00</span>
+                                <span id="marketCapChange" class="change">0.00%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="market-divider"></div>
+                    <div class="market-stat">
+                        <div class="stat-group">
+                            <span class="label">24h Volume</span>
+                            <span id="total24hVolume" class="value">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="crypto-controls">
+                <div class="search-container">
+                    <input type="text" id="cryptoSearch" placeholder="Search cryptocurrency...">
+                </div>
+                <div class="view-toggle">
+                    <label class="toggle-label">
+                        <input type="checkbox" id="detailedViewToggle" checked>
+                        <span class="slider"></span>
+                        <span class="toggle-text">Detailed View</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="crypto-list">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Coin</th>
+                            <th>Price</th>
+                            <th>24h</th>
+                            <th class="detailed-column">7d</th>
+                            <th class="detailed-column">24h Volume</th>
+                            <th class="detailed-column">Market Cap</th>
+                            <th class="detailed-column">Last 7 Days</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cryptoTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
