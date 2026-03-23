@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>WamSave</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#0b0f18;color:#e2eaf5;font-family:'Inter',sans-serif;font-size:14px}
+
+/* layout */
+#app{display:flex;flex-direction:column;height:100vh}
+#topbar{display:flex;align-items:center;gap:14px;height:52px;padding:0 20px;background:#0f1520;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;z-index:40}
+#main-row{display:flex;flex:1;overflow:hidden}
+#chat-main{display:flex;flex-direction:column;width:400px;min-width:240px;max-width:65vw;background:#0f1520;border-right:1px solid rgba(255,255,255,.06);flex-shrink:0}
+#right-col{display:flex;flex-direction:column;flex:1;overflow:hidden;min-width:300px}
+#pipe-wrap{display:flex;flex:1;overflow:hidden}
+
+/* config panel */
+#cfg-panel{width:220px;flex-shrink:0;background:#0d1420;border-left:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;overflow:hidden}
+#cfg-panel h3{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#3d5470;text-transform:uppercase;padding:12px 14px 8px;border-bottom:1px solid rgba(255,255,255,.05)}
+#cfg-list{flex:1;overflow-y:auto;padding:8px 0}
+.cfg-row{display:flex;align-items:center;gap:8px;padding:7px 14px;border-bottom:1px solid rgba(255,255,255,.03)}
+.cfg-row:last-child{border-bottom:none}
+.cfg-icon{width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cfg-name{font-size:11.5px;font-family:'JetBrains Mono',monospace;color:#7a9bbf;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cfg-btns{display:flex;gap:3px;flex-shrink:0}
+.cfg-btn{font-family:'JetBrains Mono',monospace;font-size:9px;padding:2px 6px;border-radius:3px;border:1px solid rgba(255,255,255,.1);background:transparent;color:#3d5470;cursor:pointer;transition:all .15s;white-space:nowrap}
+.cfg-btn.sel-mcp{background:rgba(99,179,237,.18);border-color:rgba(99,179,237,.4);color:#63b3ed}
+.cfg-btn.sel-fallback{background:rgba(251,191,36,.15);border-color:rgba(251,191,36,.4);color:#fbbf24}
+.cfg-btn.sel-off{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1);color:#3d5470}
+.cfg-divider{height:1px;background:rgba(255,255,255,.05);margin:8px 14px}
+
+/* pipe area */
+#pipe-view{flex:1;overflow:hidden;position:relative;display:flex;flex-direction:column}
+#pipe-strip{display:flex;align-items:center;gap:10px;padding:10px 20px;border-bottom:1px solid rgba(255,255,255,.06);background:rgba(11,15,24,.75);backdrop-filter:blur(10px);flex-shrink:0}
+#pipe-canvas{flex:1;overflow-y:auto;overflow-x:hidden;padding:22px 20px 14px;display:flex;flex-direction:column;position:relative}
+
+/* log */
+#log-area{height:190px;min-height:60px;display:flex;flex-direction:column;background:rgba(11,15,24,.92);border-top:1px solid rgba(255,255,255,.06);flex-shrink:0}
+#log-header{display:flex;align-items:center;gap:8px;padding:7px 18px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0}
+#log-strip{flex:1;overflow-y:auto;padding:4px 0 6px;display:flex;flex-direction:column}
+
+/* drag handles */
+.col-resizer{width:5px;background:rgba(255,255,255,.04);cursor:col-resize;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.col-resizer:hover,.col-resizer.active{background:rgba(99,179,237,.3)}
+.log-resizer{height:5px;background:rgba(255,255,255,.04);cursor:row-resize;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.log-resizer:hover,.log-resizer.active{background:rgba(99,179,237,.3)}
+.drag-dots-h,.drag-dots-v{display:flex;gap:3px;opacity:.4;pointer-events:none}
+.drag-dots-h span,.drag-dots-v span{width:3px;height:3px;border-radius:50%;background:rgba(99,179,237,.7);display:block}
+.drag-dots-v{flex-direction:column}
+
+/* chat */
+#chat-hdr{padding:14px 18px 12px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+#chat-msgs{flex:1;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:16px;scroll-behavior:smooth}
+#chat-foot{padding:12px 14px;border-top:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;gap:9px;flex-shrink:0}
+.bubble{max-width:90%;padding:11px 14px;border-radius:14px;font-size:14px;line-height:1.65;animation:pop-in .28s cubic-bezier(.22,.68,0,1.15) both}
+.msg-user{display:flex;flex-direction:column;gap:4px;align-items:flex-end}
+.msg-bot{display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+
+/* tooltip */
+#node-tooltip{position:fixed;z-index:9999;width:240px;background:#18263a;border:1px solid rgba(99,179,237,.25);border-radius:10px;padding:12px 14px;pointer-events:none;box-shadow:0 12px 36px rgba(0,0,0,.55);opacity:0;transition:opacity .15s;font-family:'Inter',sans-serif}
+#node-tooltip.visible{opacity:1}
+.tip-title{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:#e2eaf5;margin-bottom:5px}
+.tip-body{font-size:12px;color:#7a9bbf;line-height:1.55;margin-bottom:6px}
+.tip-badge{font-family:'JetBrains Mono',monospace;font-size:9px;padding:2px 7px;border-radius:3px;display:inline-block}
+
+/* scrollbars */
+#chat-msgs::-webkit-scrollbar,#log-strip::-webkit-scrollbar,#pipe-canvas::-webkit-scrollbar,#cfg-list::-webkit-scrollbar{width:3px}
+#chat-msgs::-webkit-scrollbar-thumb{background:rgba(99,179,237,.15);border-radius:3px}
+#log-strip::-webkit-scrollbar-thumb,#cfg-list::-webkit-scrollbar-thumb{background:rgba(99,179,237,.1);border-radius:3px}
+#pipe-canvas::-webkit-scrollbar-thumb{background:rgba(99,179,237,.08);border-radius:3px}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pop-in{from{opacity:0;transform:translateY(7px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes dot-bop{0%,80%,100%{transform:scale(1);opacity:.35}40%{transform:scale(1.5);opacity:1}}
+@keyframes glow-amber{0%,100%{box-shadow:0 0 0 0 rgba(251,191,36,0)}50%{box-shadow:0 0 0 4px rgba(251,191,36,.15)}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar"></div>
+  <div id="main-row">
+    <div id="chat-main">
+      <div id="chat-hdr"></div>
+      <div id="chat-msgs"></div>
+      <div id="chat-foot"></div>
+    </div>
+    <div id="col-resizer-handle" class="col-resizer"><div class="drag-dots-v"><span></span><span></span><span></span></div></div>
+    <div id="right-col">
+      <div id="pipe-wrap">
+        <div id="pipe-view">
+          <div id="pipe-strip"></div>
+          <div id="pipe-canvas"></div>
+        </div>
+        <div id="cfg-panel">
+          <h3>Connector Config</h3>
+          <div id="cfg-list"></div>
+        </div>
+      </div>
+      <div id="log-resizer-handle" class="log-resizer"><div class="drag-dots-h"><span></span><span></span><span></span></div></div>
+      <div id="log-area">
+        <div id="log-header"></div>
+        <div id="log-strip"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="node-tooltip"><div class="tip-title" id="tt-title"></div><div class="tip-body" id="tt-body"></div><span class="tip-badge" id="tt-badge"></span></div>
+
+<script>
+var C = {
+  bg:'#0b0f18', panel:'#0f1520', card:'#151d2c', lift:'#1c2538',
+  bdr:'rgba(255,255,255,0.06)',
+  sky:'#63b3ed', skyF:'rgba(99,179,237,0.09)', skyM:'rgba(99,179,237,0.22)',
+  mint:'#34d399', mintF:'rgba(52,211,153,0.09)',
+  amb:'#fbbf24', ambF:'rgba(251,191,36,0.09)',
+  red:'#f87171', redF:'rgba(248,113,113,0.09)',
+  vio:'#a78bfa', vioF:'rgba(167,139,250,0.09)',
+  tel:'#2dd4bf', telF:'rgba(45,212,191,0.09)',
+  org:'#fb923c', orgF:'rgba(251,146,60,0.09)',
+  grn:'#86efac', grnF:'rgba(134,239,172,0.09)',
+  ind:'#818cf8', indF:'rgba(129,140,248,0.09)',
+  tx:'#e2eaf5', tx2:'#7a9bbf', tx3:'#3d5470',
+  mono:"'JetBrains Mono',monospace", sans:"'Inter',sans-serif", brand:"'Syne',sans-serif",
+};
+
+// connector catalogue — each entry has mcp and fallback variants
+var CONNECTORS = [
+  {
+    key:'ctrlm', label:'Control-M', icon:'screen',
+    color:C.amb, colorBg:C.ambF, mode:'mcp',
+    mcp:  { id:'node-ctrlm',   sub:'job history API',    tip:'Direct MCP tool call — job run history, exit codes, chain status.' },
+    fallback:{ id:'node-scraper',  sub:'UI scrape',          tip:'Headless browser scrapes the Control-M job status table. Slower but no integration needed.' },
+  },
+  {
+    key:'splunk', label:'Splunk', icon:'chat',
+    color:C.red, colorBg:C.redF, mode:'mcp',
+    mcp:  { id:'node-splunk',  sub:'log search API',     tip:'Runs a Splunk query and streams back matching production log events.' },
+    fallback:{ id:'node-logparser',sub:'log file parse',      tip:'Reads raw log files from shared drive or S3, matches patterns with regex.' },
+  },
+  {
+    key:'remedy', label:'BMC Remedy', icon:'check',
+    color:C.mint, colorBg:C.mintF, mode:'mcp',
+    mcp:  { id:'node-remedy',  sub:'ITSM API',            tip:'Reads open incidents, priorities, resolutions, and ownership from Remedy.' },
+    fallback:{ id:'node-inboxscan',sub:'inbox scan',          tip:'Monitors incidents email inbox and extracts ticket info from alert messages.' },
+  },
+  {
+    key:'confluence', label:'Confluence', icon:'doc',
+    color:C.grn, colorBg:C.grnF, mode:'mcp',
+    mcp:  { id:'node-confluence',sub:'docs API',          tip:'Searches SOPs and runbooks matching the query via Confluence API.' },
+    fallback:{ id:'node-wikicrawl',sub:'HTML crawl',          tip:'Fetches Confluence HTML pages directly — no auth needed for internal pages.' },
+  },
+  {
+    key:'jira', label:'Jira', icon:'timer',
+    color:C.ind, colorBg:C.indF, mode:'mcp',
+    mcp:  { id:'node-jira',    sub:'ticket API',          tip:'Logs errors as tracked Jira bug tickets. Not for incidents — those go to Remedy.' },
+    fallback:{ id:'node-csvwriter',sub:'CSV log',              tip:'No Jira API — writes error entries to a shared CSV for manual triage.' },
+  },
+];
+
+var st = {
+  isPaused:false, isRunning:false, pauseDone:null,
+  chatW:400, logH:190, logN:0,
+};
+
+var nReg={}, wReg={};
+
+// var debugFlag = true; 
+
+function $id(id){ return document.getElementById(id); }
+function mk(tag,p){
+  var e=document.createElement(tag); if(!p)return e;
+  if(p.id)   e.id=p.id;
+  if(p.cls)  e.className=p.cls;
+  if(p.text) e.textContent=p.text;
+  if(p.html) e.innerHTML=p.html;
+  if(p.style)Object.keys(p.style).forEach(k=>e.style[k]=p.style[k]);
+  if(p.attrs)Object.keys(p.attrs).forEach(k=>e.setAttribute(k,p.attrs[k]));
+  return e;
+}
+function sty(el,o){Object.keys(o).forEach(k=>el.style[k]=o[k]);}
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+
+var icons = {
+  user:  '<path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  brain: '<path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><circle cx="12" cy="12" r="10"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  router:'<circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/>',
+  screen:'<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>',
+  chat:  '<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>',
+  check: '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>',
+  doc:   '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8"/>',
+  timer: '<circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>',
+  stack: '<path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>',
+  flash: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+  arrow: '<path d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z"/>',
+  plan:  '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+  gear:  '<path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>',
+  pause: '<rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>',
+  play:  '<polygon points="5 3 19 12 5 21 5 3"/>',
+  kb:    '<path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>',
+  db:    '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>',
+};
+function svg(k,sz,col){ sz=sz||14;col=col||'currentColor'; return '<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" fill="none" stroke="'+col+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(icons[k]||'')+'</svg>'; }
+
+// ---------- config panel — builds the per-connector MCP/Fallback/----------
+function buildConfigPanel() {
+  var list = $id('cfg-list');
+  list.innerHTML = '';
+
+  CONNECTORS.forEach(function(conn, ci) {
+    var row = mk('div',{cls:'cfg-row'});
+    var ico = mk('div',{cls:'cfg-icon',html:svg(conn.icon,12,conn.color),style:{background:conn.colorBg}});
+    var nm  = mk('div',{cls:'cfg-name',text:conn.label});
+    var btns = mk('div',{cls:'cfg-btns'});
+
+    ['mcp','fallback','off'].forEach(function(m) {
+      var b = mk('button',{cls:'cfg-btn',text:m==='off'?'off':m.toUpperCase()});
+      if(conn.mode===m) b.classList.add('sel-'+m);
+      b.addEventListener('click',function(){
+        conn.mode = m;
+        // re-render just this row's buttons
+        btns.querySelectorAll('.cfg-btn').forEach(function(x,xi){
+          x.className='cfg-btn'; if(['mcp','fallback','off'][xi]===m) x.classList.add('sel-'+m);
+        });
+        rebuildPipeline();
+      });
+      btns.appendChild(b);
+    });
+
+    row.appendChild(ico); row.appendChild(nm); row.appendChild(btns);
+    list.appendChild(row);
+
+    // separator between connector groups
+    if(ci < CONNECTORS.length-1){
+      list.appendChild(mk('div',{cls:'cfg-divider'}));
+    }
+  });
+}
+
+// ---------- pipeline building ----------
+// generates sections + wires dynamically
+function buildPipelineGraph() {
+  var mcpNodes=[], fbNodes=[], hasFallback=false, hasMcp=false;
+
+  CONNECTORS.forEach(function(conn) {
+    if(conn.mode==='mcp'){
+      hasMcp=true;
+      mcpNodes.push({ id:conn.mcp.id, label:conn.label, sub:conn.mcp.sub, icon:conn.icon, color:conn.color, colorBg:conn.colorBg, tip:conn.mcp.tip, fixed:false, connKey:conn.key, nodeMode:'mcp' });
+    } else if(conn.mode==='fallback'){
+      hasFallback=true;
+      fbNodes.push({ id:conn.fallback.id, label:conn.label, sub:conn.fallback.sub, icon:conn.icon, color:conn.color, colorBg:conn.colorBg, tip:conn.fallback.tip, fixed:false, connKey:conn.key, nodeMode:'fallback' });
+    }
+  });
+
+  var s0Nodes = [
+    { id:'node-user',   label:'User Query',   sub:'input',        icon:'user',   color:C.vio, colorBg:C.vioF, tip:'Captures the message and extracts key entities.', fixed:true },
+    { id:'node-intent', label:'Intent Engine',sub:'NLP classify',  icon:'brain',  color:C.sky, colorBg:C.skyF, tip:'Classifies intent — job, incident, error, doc, code, or chat.', fixed:true },
+    { id:'node-router', label:'Smart Router', sub:'dispatch',      icon:'router', color:C.tel, colorBg:C.telF, tip:'Routes each connector to MCP or fallback based on your config. Mixed mode routes different connectors differently.', fixed:true },
+  ];
+
+  var sections = [{ heading:'① Parse & Route', nodes:s0Nodes, wires:['wh-u-i','wh-i-r'] }];
+
+  if(hasMcp){
+    var wires=[]; for(var i=0;i<mcpNodes.length-1;i++) wires.push('wh-mcp-'+i);
+    sections.push({ heading:'② MCP Tool Calls', nodes:mcpNodes, wires:wires });
+  }
+
+  // Fallback section (if any connectors are on fallback)
+  if(hasFallback){
+    var wires2=[]; for(var j=0;j<fbNodes.length-1;j++) wires2.push('wh-fb-'+j);
+    sections.push({ heading: hasMcp ? '③ Fallback Sources' : '② Fallback Sources', nodes:fbNodes, wires:wires2 });
+  }
+
+  if(hasFallback){
+    sections.push({
+      heading: hasMcp ? '④ Local Enrichment' : '③ Local Enrichment',
+      nodes:[
+        { id:'node-kb',    label:'Knowledge Base',sub:'static lookup',  icon:'kb', color:C.vio, colorBg:C.vioF, tip:'Pre-built local KB. Works offline.', fixed:true },
+        { id:'node-cache', label:'Result Cache',  sub:'recent answers', icon:'db', color:C.tel, colorBg:C.telF, tip:'Caches answers from recent queries.', fixed:true },
+      ],
+      wires:['wh-kc'],
+    });
+  }
+
+  var lastNum = sections.length;
+  sections.push({
+    heading: numToCircle(lastNum)+' Compose & Send',
+    nodes:[
+      { id:'node-agg',    label:'Aggregator',   sub:'merge',    icon:'stack', color:C.sky, colorBg:C.skyF, tip:'Deduplicates results from all active sources.', fixed:true },
+      { id:'node-ai',     label:'WS-AI Engine', sub:'generate', icon:'flash', color:C.org, colorBg:C.orgF, tip:'Writes structured answer — root cause, steps, doc links.', fixed:true },
+      { id:'node-output', label:'Response',     sub:'to chat',  icon:'arrow', color:C.mint,colorBg:C.mintF,tip:'Delivers final answer to the chat window.', fixed:true },
+    ],
+    wires:['wh-aa','wh-ao'],
+  });
+
+  return { sections:sections };
+}
+
+function numToCircle(n){ return ['①','②','③','④','⑤','⑥'][n-1]||n+'.'; }
+
+function rebuildPipeline() {
+  nReg={}; wReg={};
+  var canvas = $id('pipe-canvas'); canvas.innerHTML='';
+
+  // faint grid bg
+  canvas.appendChild(mk('div',{style:{position:'absolute',inset:'0',pointerEvents:'none',zIndex:'0',backgroundImage:'linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px)',backgroundSize:'38px 38px'}}));
+  canvas.appendChild(mk('div',{style:{position:'absolute',inset:'0',pointerEvents:'none',zIndex:'0',background:'radial-gradient(ellipse at 25% 25%,rgba(99,179,237,.04) 0%,transparent 55%),radial-gradient(ellipse at 75% 75%,rgba(52,211,153,.03) 0%,transparent 50%)'}}));
+
+  var noConn = CONNECTORS.every(c=>c.mode==='off');
+  if(noConn){
+    var idle2=mk('div',{style:{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:'100%',gap:'10px',color:C.tx3,textAlign:'center',padding:'30px',position:'relative',zIndex:'1'}});
+    idle2.appendChild(mk('div',{text:'⚠️',style:{fontSize:'28px',opacity:'.4'}}));
+    idle2.appendChild(mk('div',{text:'All connectors are off.\nEnable at least one in the config panel.',style:{fontSize:'13px',lineHeight:'1.6'}}));
+    canvas.appendChild(idle2); return;
+  }
+
+  var idle=mk('div',{id:'idle-placeholder',style:{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:'100%',gap:'12px',color:C.tx3,textAlign:'center',padding:'30px',position:'relative',zIndex:'1'}});
+  idle.appendChild(mk('div',{text:'⚙️',style:{fontSize:'36px',opacity:'.28'}}));
+  idle.appendChild(mk('div',{text:'Pipeline idle.\nSend a message to watch execution.',style:{fontSize:'14px',lineHeight:'1.6'}}));
+  canvas.appendChild(idle);
+
+  var wrap=mk('div',{id:'nodes-container',style:{display:'none',flexDirection:'column',gap:'0',position:'relative',zIndex:'1'}});
+  var graph=buildPipelineGraph();
+
+  graph.sections.forEach(function(sec,si){
+    wrap.appendChild(mk('div',{text:sec.heading,style:{fontFamily:C.mono,fontSize:'10px',letterSpacing:'1.8px',color:C.tx3,textTransform:'uppercase',marginBottom:'10px',paddingLeft:'2px'}}
